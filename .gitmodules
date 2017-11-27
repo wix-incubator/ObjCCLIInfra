@@ -1,0 +1,3 @@
+[submodule "GBCli"]
+	path = GBCli
+	url = https://github.com/tomaz/GBCli.git
