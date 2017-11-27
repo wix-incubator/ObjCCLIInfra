@@ -148,7 +148,7 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 	if([settings boolForKey:@"help"])
 	{
 		LNUsagePrintMessage(nil, LNLogLevelStdOut);
-		return 0;
+		exit(0);
 	}
 	
 	return settings;
