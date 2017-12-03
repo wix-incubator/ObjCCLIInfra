@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 extern void LNUsageSetIntroStrings(NSArray<NSString*>* __nullable introStrings);
 extern void LNUsageSetExampleStrings(NSArray<NSString*>* __nullable usageStrings);
 extern void LNUsageSetOptions(NSArray<LNUsageOption*>* __nullable usageOptions);
+extern void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOptions);
 extern void LNUsageSetAdditionalTopics(NSArray<NSDictionary<NSString*, NSArray*>*>* __nullable additionalTopics);
 extern void LNUsageSetAdditionalStrings(NSArray<NSString*>* __nullable additionalStrings);
 

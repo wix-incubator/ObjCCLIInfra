@@ -11,6 +11,7 @@
 static NSArray<NSString*>* __introStrings;
 static NSArray<NSString*>* __usageStrings;
 static NSArray<LNUsageOption*>* __usageOptions;
+static NSArray<LNUsageOption*>* __hiddenUsageOptions;
 static NSArray<NSDictionary<NSString*, NSArray*>*>* __additionalTopics;
 static NSArray<NSString*>* __additionalStrings;
 
@@ -58,6 +59,11 @@ void LNUsageSetExampleStrings(NSArray<NSString*>* usageStrings)
 void LNUsageSetOptions(NSArray<LNUsageOption*>* __nullable usageOptions)
 {
 	__usageOptions = [usageOptions copy];
+}
+
+void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOptions)
+{
+	__hiddenUsageOptions = [hiddenUsageOptions copy];
 }
 
 void LNUsageSetAdditionalTopics(NSArray<NSDictionary<NSString*, NSArray*>*>* additionalTopics)
@@ -137,6 +143,10 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 	
 	NSArray<LNUsageOption*>* options = [__usageOptions arrayByAddingObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
 	[options enumerateObjectsUsingBlock:^(LNUsageOption*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		[parser registerOption:obj.name shortcut:[obj.shortcut characterAtIndex:0] requirement:obj.valueRequirement];
+	}];
+	
+	[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 		[parser registerOption:obj.name shortcut:[obj.shortcut characterAtIndex:0] requirement:obj.valueRequirement];
 	}];
 	
