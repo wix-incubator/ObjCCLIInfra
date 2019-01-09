@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) GBValueRequirements valueRequirement;
 @property (nonatomic, copy, readonly) NSString* description;
 
++ (instancetype)emptyOption;
 + (instancetype)optionWithName:(NSString*)name valueRequirement:(GBValueRequirements)valueRequirement description:(NSString*)description;
 + (instancetype)optionWithName:(NSString*)name shortcut:(nullable NSString*)shortcut valueRequirement:(GBValueRequirements)valueRequirement description:(NSString*)description;
 

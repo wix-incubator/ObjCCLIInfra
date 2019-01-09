@@ -15,6 +15,8 @@ static NSArray<LNUsageOption*>* __hiddenUsageOptions;
 static NSArray<NSDictionary<NSString*, NSArray*>*>* __additionalTopics;
 static NSArray<NSString*>* __additionalStrings;
 
+@interface _LNEmptyOption : LNUsageOption @end
+
 @interface LNUsageOption ()
 
 @property (nonatomic, copy, readwrite) NSString* name;
@@ -44,7 +46,14 @@ static NSArray<NSString*>* __additionalStrings;
 	return rv;
 }
 
++ (instancetype)emptyOption
+{
+	return [_LNEmptyOption new];
+}
+
 @end
+
+@implementation _LNEmptyOption @end
 
 void LNUsageSetIntroStrings(NSArray<NSString*>* introStrings)
 {
@@ -111,6 +120,12 @@ void LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel)
 	NSArray* options = [__usageOptions arrayByAddingObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
 	LNLog(LNLogLevelStdOut, @"Options:");
 	[options enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		if([obj isKindOfClass:_LNEmptyOption.class])
+		{
+			LNLog(LNLogLevelStdOut, @"");
+			return;
+		}
+		
 		NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
 		LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@%@", [optionString stringByPaddingToLength:longestOptionLength + 3 withString:@" " startingAtIndex:0], obj.description], utilName);
 	}];
@@ -143,6 +158,11 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 	
 	NSArray<LNUsageOption*>* options = [__usageOptions arrayByAddingObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
 	[options enumerateObjectsUsingBlock:^(LNUsageOption*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		if([obj isKindOfClass:_LNEmptyOption.class])
+		{
+			return;
+		}
+		
 		[parser registerOption:obj.name shortcut:[obj.shortcut characterAtIndex:0] requirement:obj.valueRequirement];
 	}];
 	
