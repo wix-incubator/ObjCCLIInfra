@@ -34,6 +34,7 @@ extern void LNUsageSetAdditionalStrings(NSArray<NSString*>* __nullable additiona
 
 extern void LNUsagePrintMessage(NSString* __nullable prependMessage, LNLogLevel logLevel);
 
+extern void LNUsagePrintArguments(LNLogLevel logLevel);
 extern GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv);
 
 NS_ASSUME_NONNULL_END

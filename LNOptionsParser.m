@@ -184,4 +184,20 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 	return settings;
 }
 
-
+void LNUsagePrintArguments(LNLogLevel logLevel)
+{
+	NSMutableArray* args = [NSMutableArray new];
+	
+	[NSProcessInfo.processInfo.arguments enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		NSString* format = @"%@";
+		if([obj rangeOfCharacterFromSet:[NSCharacterSet.alphanumericCharacterSet invertedSet]].location != NSNotFound)
+		{
+			format = @"\"%@\"";
+		}
+		
+		[args addObject:[NSString stringWithFormat:format, obj]];
+	}];
+	
+	LNLog(logLevel, @"%@", [args componentsJoinedByString:@" "]);
+//	NSLog(@"%@", [NSProcessInfo.processInfo.arguments componentsJoinedByString:@" "]);
+}
