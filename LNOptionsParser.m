@@ -106,6 +106,43 @@ void LNUsageSetAdditionalStrings(NSArray<NSString*>* additionalStrings)
 	__additionalStrings = [additionalStrings copy];
 }
 
+static void _LNPrintOptionsArray(NSArray<LNUsageOption*>* usageOptions, NSString* utilName)
+{
+	__block NSUInteger longestOptionLength = 0;
+	__block NSUInteger longestShortcutLength = 0;
+	
+	[usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		longestOptionLength = obj.name.length > longestOptionLength ? obj.name.length : longestOptionLength;
+		longestShortcutLength = obj.shortcut.length > longestShortcutLength ? obj.shortcut.length : longestShortcutLength;
+	}];
+	
+	LNLog(LNLogLevelStdOut, @"Options:");
+	[usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		if([obj isKindOfClass:_LNEmptyOption.class])
+		{
+			LNLog(LNLogLevelStdOut, @"");
+			return;
+		}
+		
+		NSUInteger prefix = longestOptionLength + longestShortcutLength + 5;
+		NSString* prefixString = @"    ";
+		
+		NSMutableString* description = [NSMutableString new];
+		[[obj.description componentsSeparatedByString:@"\n"] enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+			if(description.length > 0)
+			{
+				[description appendFormat:@"\n%@%@%@", prefixString, prefixString, [@"" stringByPaddingToLength:prefix withString:@" " startingAtIndex:0]];
+			}
+		
+			[description appendString:obj];
+		}];
+		
+		NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
+		LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"%@%@%@%@", prefixString, [optionString stringByPaddingToLength:prefix withString:@" " startingAtIndex:0], prefixString, description], utilName);
+	}];
+	LNLog(LNLogLevelStdOut, @"");
+}
+
 static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, BOOL printHidden)
 {
 	NSString* utilName = NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent;
@@ -125,52 +162,18 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	
 	if(__usageStrings.count > 0)
 	{
-		LNLog(LNLogLevelStdOut, @"Usage:");
+		LNLog(LNLogLevelStdOut, @"Usage Examples:");
 		[__usageStrings enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 			LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@", obj], utilName);
 		}];
 		LNLog(LNLogLevelStdOut, @"");
 	}
 	
-	__block NSUInteger longestOptionLength = 0;
-	[__usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-		NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
-		longestOptionLength = optionString.length > longestOptionLength ? optionString.length : longestOptionLength;
-	}];
-	
-	LNLog(LNLogLevelStdOut, @"Options:");
-	[__usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-		if([obj isKindOfClass:_LNEmptyOption.class])
-		{
-			LNLog(LNLogLevelStdOut, @"");
-			return;
-		}
-		
-		NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
-		LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@%@", [optionString stringByPaddingToLength:longestOptionLength + 3 withString:@" " startingAtIndex:0], obj.description], utilName);
-	}];
-	LNLog(LNLogLevelStdOut, @"");
+	_LNPrintOptionsArray(__usageOptions, utilName);
 	
 	if(printHidden)
 	{
-		__block NSUInteger longestOptionLength = 0;
-		[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-			NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
-			longestOptionLength = optionString.length > longestOptionLength ? optionString.length : longestOptionLength;
-		}];
-		
-		LNLog(LNLogLevelStdOut, @"Expanded Options:");
-		[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-			if([obj isKindOfClass:_LNEmptyOption.class])
-			{
-				LNLog(LNLogLevelStdOut, @"");
-				return;
-			}
-			
-			NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
-			LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@%@", [optionString stringByPaddingToLength:longestOptionLength + 3 withString:@" " startingAtIndex:0], obj.description], utilName);
-		}];
-		LNLog(LNLogLevelStdOut, @"");
+		_LNPrintOptionsArray(__hiddenUsageOptions, utilName);
 	}
 	
 	if(__additionalTopics.count > 0)
