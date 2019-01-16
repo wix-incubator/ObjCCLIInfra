@@ -55,6 +55,13 @@ static NSArray<NSString*>* __additionalStrings;
 
 @implementation _LNEmptyOption @end
 
+__attribute__((constructor))
+static void __LNUsageInit(void)
+{
+	LNUsageSetOptions(nil);
+	LNUsageSetHiddenOptions(nil);
+}
+
 void LNUsageSetIntroStrings(NSArray<NSString*>* introStrings)
 {
 	__introStrings = [introStrings copy];
@@ -67,12 +74,26 @@ void LNUsageSetExampleStrings(NSArray<NSString*>* usageStrings)
 
 void LNUsageSetOptions(NSArray<LNUsageOption*>* __nullable usageOptions)
 {
-	__usageOptions = [usageOptions copy];
+	NSMutableArray* options = usageOptions.mutableCopy;
+	if(options == nil)
+	{
+		options = [NSMutableArray new];
+	}
+	[options addObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
+	
+	__usageOptions = options;
 }
 
 void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOptions)
 {
-	__hiddenUsageOptions = [hiddenUsageOptions copy];
+	NSMutableArray* options = hiddenUsageOptions.mutableCopy;
+	if(options == nil)
+	{
+		options = [NSMutableArray new];
+	}
+	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:GBValueNone description:@"Prints expanded usage"]];
+	
+	__hiddenUsageOptions = options;
 }
 
 void LNUsageSetAdditionalTopics(NSArray<NSDictionary<NSString*, NSArray*>*>* additionalTopics)
@@ -85,7 +106,7 @@ void LNUsageSetAdditionalStrings(NSArray<NSString*>* additionalStrings)
 	__additionalStrings = [additionalStrings copy];
 }
 
-void LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel)
+static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, BOOL printHidden)
 {
 	NSString* utilName = NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent;
 	
@@ -117,9 +138,8 @@ void LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel)
 		longestOptionLength = optionString.length > longestOptionLength ? optionString.length : longestOptionLength;
 	}];
 	
-	NSArray* options = [__usageOptions arrayByAddingObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
 	LNLog(LNLogLevelStdOut, @"Options:");
-	[options enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+	[__usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 		if([obj isKindOfClass:_LNEmptyOption.class])
 		{
 			LNLog(LNLogLevelStdOut, @"");
@@ -130,6 +150,28 @@ void LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel)
 		LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@%@", [optionString stringByPaddingToLength:longestOptionLength + 3 withString:@" " startingAtIndex:0], obj.description], utilName);
 	}];
 	LNLog(LNLogLevelStdOut, @"");
+	
+	if(printHidden)
+	{
+		__block NSUInteger longestOptionLength = 0;
+		[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+			NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
+			longestOptionLength = optionString.length > longestOptionLength ? optionString.length : longestOptionLength;
+		}];
+		
+		LNLog(LNLogLevelStdOut, @"Expanded Options:");
+		[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+			if([obj isKindOfClass:_LNEmptyOption.class])
+			{
+				LNLog(LNLogLevelStdOut, @"");
+				return;
+			}
+			
+			NSString* optionString = obj.shortcut != nil ? [NSString stringWithFormat:@"--%@, -%@", obj.name, obj.shortcut] : [NSString stringWithFormat:@"--%@", obj.name];
+			LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@%@", [optionString stringByPaddingToLength:longestOptionLength + 3 withString:@" " startingAtIndex:0], obj.description], utilName);
+		}];
+		LNLog(LNLogLevelStdOut, @"");
+	}
 	
 	if(__additionalTopics.count > 0)
 	{
@@ -152,12 +194,16 @@ void LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel)
 	}
 }
 
+void LNUsagePrintMessage(NSString* __nullable prependMessage, LNLogLevel logLevel)
+{
+	_LNUsagePrintMessage(prependMessage, logLevel, NO);
+}
+
 GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv)
 {
 	GBCommandLineParser *parser = [GBCommandLineParser new];
 	
-	NSArray<LNUsageOption*>* options = [__usageOptions arrayByAddingObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
-	[options enumerateObjectsUsingBlock:^(LNUsageOption*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+	[__usageOptions enumerateObjectsUsingBlock:^(LNUsageOption*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 		if([obj isKindOfClass:_LNEmptyOption.class])
 		{
 			return;
@@ -177,7 +223,13 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 	
 	if([settings boolForKey:@"help"])
 	{
-		LNUsagePrintMessage(nil, LNLogLevelStdOut);
+		_LNUsagePrintMessage(nil, LNLogLevelStdOut, NO);
+		exit(0);
+	}
+	
+	if([settings boolForKey:@"help2"])
+	{
+		_LNUsagePrintMessage(nil, LNLogLevelStdOut, YES);
 		exit(0);
 	}
 	
@@ -199,5 +251,4 @@ void LNUsagePrintArguments(LNLogLevel logLevel)
 	}];
 	
 	LNLog(logLevel, @"%@", [args componentsJoinedByString:@" "]);
-//	NSLog(@"%@", [NSProcessInfo.processInfo.arguments componentsJoinedByString:@" "]);
 }
