@@ -30,9 +30,12 @@ void LNLog(LNLogLevel logLevel, NSString* format, ...)
 			va_end(argumentList);
 		}
 		
-		@autoreleasepool
+		if(logLevel >= LNLogLevelWarning)
 		{
-			fprintf(selectedOutputHandle, "%s\n", [message UTF8String]);
+			@autoreleasepool
+			{
+				fprintf(selectedOutputHandle, "%s\n", [message UTF8String]);
+			}
 		}
 		
 		NSNumber* osLogType = logToLogMapping[@(logLevel)];
