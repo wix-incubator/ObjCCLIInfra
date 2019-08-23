@@ -14,7 +14,7 @@ static NSUInteger GBOptionInternalEndGroup = 1 << 10;
 #pragma mark -
 
 @interface OptionDefinition : NSObject
-@property (nonatomic, assign) char shortOption;
+@property (nonatomic, assign) NSString *shortOption;
 @property (nonatomic, copy) NSString *longOption;
 @property (nonatomic, copy) NSString *description;
 @property (nonatomic, assign) GBOptionFlags flags;
@@ -65,7 +65,7 @@ static NSUInteger GBOptionInternalEndGroup = 1 << 10;
 - (void)registerGroup:(NSString *)name description:(NSString *)description flags:(GBOptionFlags)flags optionsBlock:(void(^)(GBOptionsHelper *options))block {
 	NSParameterAssert(block != nil);
 	OptionDefinition *definition = [[OptionDefinition alloc] init];
-	definition.shortOption = 0;
+	definition.shortOption = nil;
 	definition.longOption = name;
 	definition.description = description;
 	definition.flags = GBOptionGroup | flags;
@@ -78,7 +78,7 @@ static NSUInteger GBOptionInternalEndGroup = 1 << 10;
 	[self.registeredOptions addObject:endDefinition];
 }
 
-- (void)registerOption:(char)shortName long:(NSString *)longName description:(NSString *)description flags:(GBOptionFlags)flags {
+- (void)registerOption:(NSString *)shortName long:(NSString *)longName description:(NSString *)description flags:(GBOptionFlags)flags {
 	OptionDefinition *definition = [[OptionDefinition alloc] init];
 	definition.shortOption = shortName;
 	definition.longOption = longName;
@@ -275,7 +275,7 @@ static NSUInteger GBOptionInternalEndGroup = 1 << 10;
 		}
 		
 		// Prepare option description.
-		NSString *shortOption = (definition.shortOption > 0) ? [NSString stringWithFormat:@"-%c", definition.shortOption] : @"  ";
+		NSString *shortOption = (definition.shortOption.length > 0) ? [NSString stringWithFormat:@"-%@", definition.shortOption] : @"  ";
 		NSString *longOption = [NSString stringWithFormat:@"--%@", definition.longOption];
 		NSString *description = definition.description ? definition.description : @"";
 		NSUInteger requirements = [self requirements:definition];

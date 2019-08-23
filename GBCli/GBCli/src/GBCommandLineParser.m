@@ -76,7 +76,7 @@ static NSString * const GBCommandLineEndOfOptionsKey = @"end-of-options"; // thi
 	self.currentOptionsGroupOptions = nil;
 }
 
-- (void)registerOption:(NSString *)longOption shortcut:(char)shortOption requirement:(GBValueRequirements)requirement {
+- (void)registerOption:(NSString *)longOption shortcut:(NSString *)shortOption requirement:(GBValueRequirements)requirement {
 	// Register option data.
 	NSMutableDictionary *data = [NSMutableDictionary dictionary];
 	data[GBCommandLineLongOptionKey] = longOption;
@@ -85,9 +85,9 @@ static NSString * const GBCommandLineEndOfOptionsKey = @"end-of-options"; // thi
 	[self.currentOptionsGroupOptions addObject:longOption];
 	
 	// Register short option data if needed.
-	if (shortOption > 0) {
-		NSString *shortOptionKey = [NSString stringWithFormat:@"%c", shortOption];
-		data[GBCommandLineShortOptionKey] = @(shortOption);
+	if (shortOption.length > 0) {
+		NSString *shortOptionKey = shortOption;
+		data[GBCommandLineShortOptionKey] = shortOption;
 		self.registeredOptionsByShortNames[shortOptionKey] = data;
 	}
 
@@ -106,7 +106,7 @@ static NSString * const GBCommandLineEndOfOptionsKey = @"end-of-options"; // thi
 	[self registerOption:longOption shortcut:0 requirement:requirement];
 }
 
-- (void)registerSwitch:(NSString *)longOption shortcut:(char)shortOption {
+- (void)registerSwitch:(NSString *)longOption shortcut:(NSString *)shortOption {
 	[self registerOption:longOption shortcut:shortOption requirement:GBValueNone];
 }
 

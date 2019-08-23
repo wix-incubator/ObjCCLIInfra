@@ -49,9 +49,9 @@ typedef void(^GBCommandLineParseBlock)(GBParseFlags flags, NSString *argument, i
 
 - (void)beginRegisterOptionGroup:(NSString *)name;
 - (void)endRegisterOptionGroup; // optional; if another beginRegisterOptionGroup: is enountered, a new group is started. Use it if you want to register "standalone" options after group.
-- (void)registerOption:(NSString *)longOption shortcut:(char)shortOption requirement:(GBValueRequirements)requirement;
+- (void)registerOption:(NSString *)longOption shortcut:(NSString *)shortOption requirement:(GBValueRequirements)requirement;
 - (void)registerOption:(NSString *)longOption requirement:(GBValueRequirements)requirement;
-- (void)registerSwitch:(NSString *)longOption shortcut:(char)shortOption;
+- (void)registerSwitch:(NSString *)longOption shortcut:(NSString *)shortOption;
 - (void)registerSwitch:(NSString *)longOption;
 
 #pragma mark - Options parsing

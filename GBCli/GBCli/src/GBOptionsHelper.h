@@ -27,7 +27,7 @@ typedef NS_OPTIONS(NSUInteger, GBOptionFlags) {
 
 /** Description of a single option or separator. */
 typedef struct {
-	char shortOption; ///< Short option char or `0` if not used.
+	__unsafe_unretained NSString *shortOption; ///< Short option char or `0` if not used.
 	__unsafe_unretained NSString *longOption; ///< Long option name - required for options.
 	__unsafe_unretained NSString *description; ///< Description of the option.
 	GBOptionFlags flags; ///< Various flags.
@@ -124,7 +124,7 @@ typedef NSString *(^GBOptionStringBlock)(void);
 - (void)registerSeparator:(NSString *)description;
 - (void)registerGroup:(NSString *)name description:(NSString *)description optionsBlock:(void(^)(GBOptionsHelper *options))block;
 - (void)registerGroup:(NSString *)name description:(NSString *)description flags:(GBOptionFlags)flags optionsBlock:(void(^)(GBOptionsHelper *options))block;
-- (void)registerOption:(char)shortName long:(NSString *)longName description:(NSString *)description flags:(GBOptionFlags)flags;
+- (void)registerOption:(NSString *)shortName long:(NSString *)longName description:(NSString *)description flags:(GBOptionFlags)flags;
 
 #pragma mark - Integration with other components
 

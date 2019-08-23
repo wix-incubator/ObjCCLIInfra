@@ -150,6 +150,13 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	if(prependMessage.length > 0)
 	{
 		LNLog(logLevel, @"%@\n", prependMessage);
+		
+		if(logLevel >= LNLogLevelWarning)
+		{
+			LNLog(logLevel, @"%@", [NSString stringWithFormat:@"See '%@ --help'.", NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent]);
+		}
+		
+		return;
 	}
 	
 	if(__introStrings.count > 0)
@@ -212,11 +219,11 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 			return;
 		}
 		
-		[parser registerOption:obj.name shortcut:[obj.shortcut characterAtIndex:0] requirement:obj.valueRequirement];
+		[parser registerOption:obj.name shortcut:obj.shortcut requirement:obj.valueRequirement];
 	}];
 	
 	[__hiddenUsageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-		[parser registerOption:obj.name shortcut:[obj.shortcut characterAtIndex:0] requirement:obj.valueRequirement];
+		[parser registerOption:obj.name shortcut:obj.shortcut requirement:obj.valueRequirement];
 	}];
 	
 	GBSettings *settings = [GBSettings settingsWithName:@"CLI" parent:nil];
