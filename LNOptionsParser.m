@@ -149,12 +149,12 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	
 	if(prependMessage.length > 0)
 	{
+		if(logLevel == LNLogLevelError)
+		{
+			prependMessage = [NSString stringWithFormat:@"%@ %@", prependMessage, [NSString stringWithFormat:@"See “%@ --help” for usage.", NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent]];
+		}
 		LNLog(logLevel, @"%@\n", prependMessage);
 		
-		if(logLevel >= LNLogLevelWarning)
-		{
-			LNLog(logLevel, @"%@", [NSString stringWithFormat:@"See '%@ --help'.", NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent]);
-		}
 		
 		return;
 	}

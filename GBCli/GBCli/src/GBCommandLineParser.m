@@ -137,15 +137,23 @@ static NSString * const GBCommandLineEndOfOptionsKey = @"end-of-options"; // thi
 
 - (GBCommandLineParseBlock)simplifiedOptionsParserBlock {
 	return ^(GBParseFlags flags, NSString *argument, id value, BOOL *stop) {
+		static NSString* seeHelp;
+		static dispatch_once_t onceToken;
+		dispatch_once(&onceToken, ^{
+			seeHelp = [NSString stringWithFormat:@"See “%@ --help” for usage.", NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent];
+		});
 		switch (flags) {
 			case GBParseFlagUnknownOption:
-				gbfprintln(stderr, @"Unknown command line option %@, try --help!", argument);
+				gbfprintln(stderr, @"Unknown command line option “%@”. %@", argument, seeHelp);
+				exit(-1);
 				break;
 			case GBParseFlagMissingValue:
-				gbfprintln(stderr, @"Missing value for command line option %@, try --help!", argument);
+				gbfprintln(stderr, @"Missing value for command line option “%@”. %@", argument, seeHelp);
+				exit(-1);
 				break;
 			case GBParseFlagWrongGroup:
-				gbfprintln(stderr, @"Invalid option %@ for group %@!", argument, self.currentOptionsGroupName);
+				gbfprintln(stderr, @"Invalid option “%@” for group “%@”. %@", argument, self.currentOptionsGroupName, seeHelp);
+				exit(-1);
 				break;
 			case GBParseFlagArgument:
 				[self.settings addArgument:value];
