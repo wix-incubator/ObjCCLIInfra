@@ -91,7 +91,7 @@ void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOpti
 	{
 		options = [NSMutableArray new];
 	}
-	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:GBValueNone description:@"Prints expanded usage"]];
+	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:GBValueNone description:@"Prints deprecated or advanced usage"]];
 	
 	__hiddenUsageOptions = options;
 }
@@ -106,7 +106,7 @@ void LNUsageSetAdditionalStrings(NSArray<NSString*>* additionalStrings)
 	__additionalStrings = [additionalStrings copy];
 }
 
-static void _LNPrintOptionsArray(NSArray<LNUsageOption*>* usageOptions, NSString* utilName)
+static void _LNPrintOptionsArray(NSString* title, NSArray<LNUsageOption*>* usageOptions, NSString* utilName)
 {
 	__block NSUInteger longestOptionLength = 0;
 	__block NSUInteger longestShortcutLength = 0;
@@ -116,7 +116,7 @@ static void _LNPrintOptionsArray(NSArray<LNUsageOption*>* usageOptions, NSString
 		longestShortcutLength = obj.shortcut.length > longestShortcutLength ? obj.shortcut.length : longestShortcutLength;
 	}];
 	
-	LNLog(LNLogLevelStdOut, @"Options:");
+	LNLog(LNLogLevelStdOut, @"%@:", title);
 	[usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 		if([obj isKindOfClass:_LNEmptyOption.class])
 		{
@@ -176,11 +176,11 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 		LNLog(LNLogLevelStdOut, @"");
 	}
 	
-	_LNPrintOptionsArray(__usageOptions, utilName);
+	_LNPrintOptionsArray(@"Options", __usageOptions, utilName);
 	
 	if(printHidden)
 	{
-		_LNPrintOptionsArray(__hiddenUsageOptions, utilName);
+		_LNPrintOptionsArray(@"Deprecated or Advanced Options", __hiddenUsageOptions, utilName);
 	}
 	
 	if(__additionalTopics.count > 0)
