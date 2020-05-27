@@ -7,21 +7,45 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "GBCli.h"
 #import "LNLog.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSUInteger, LNUsageOptionRequirement) {
+	LNUsageOptionRequirementRequired, ///< Command line argument requires a value.
+	LNUsageOptionRequirementOptional, ///< Command line argument can optionally have a value, but is not required.
+	LNUsageOptionRequirementNone ///< Command line argument is on/off switch.
+};
+
+@protocol LNUsageArgumentParser <NSObject>
+
+- (id)objectForKey:(NSString *)key;
+- (void)setObject:(id)value forKey:(NSString *)key;
+
+- (BOOL)boolForKey:(NSString *)key;
+- (void)setBool:(BOOL)value forKey:(NSString *)key;
+
+- (NSInteger)integerForKey:(NSString *)key;
+- (void)setInteger:(NSInteger)value forKey:(NSString *)key;
+
+- (NSUInteger)unsignedIntegerForKey:(NSString *)key;
+- (void)setUnsignedInteger:(NSUInteger)value forKey:(NSString *)key;
+
+- (CGFloat)floatForKey:(NSString *)key;
+- (void)setFloat:(CGFloat)value forKey:(NSString *)key;
+
+@end
 
 @interface LNUsageOption : NSObject
 
 @property (nonatomic, copy, readonly) NSString* name;
 @property (nonatomic, nullable, copy, readonly) NSString* shortcut;
-@property (nonatomic, readonly) GBValueRequirements valueRequirement;
+@property (nonatomic, readonly) LNUsageOptionRequirement valueRequirement;
 @property (nonatomic, copy, readonly) NSString* description;
 
 + (instancetype)emptyOption;
-+ (instancetype)optionWithName:(NSString*)name valueRequirement:(GBValueRequirements)valueRequirement description:(NSString*)description;
-+ (instancetype)optionWithName:(NSString*)name shortcut:(nullable NSString*)shortcut valueRequirement:(GBValueRequirements)valueRequirement description:(NSString*)description;
++ (instancetype)optionWithName:(NSString*)name valueRequirement:(LNUsageOptionRequirement)valueRequirement description:(NSString*)description;
++ (instancetype)optionWithName:(NSString*)name shortcut:(nullable NSString*)shortcut valueRequirement:(LNUsageOptionRequirement)valueRequirement description:(NSString*)description;
 
 @end
 
@@ -35,6 +59,6 @@ extern void LNUsageSetAdditionalStrings(NSArray<NSString*>* __nullable additiona
 extern void LNUsagePrintMessage(NSString* __nullable prependMessage, LNLogLevel logLevel);
 
 extern void LNUsagePrintArguments(LNLogLevel logLevel);
-extern GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv);
+extern id<LNUsageArgumentParser> LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv);
 
 NS_ASSUME_NONNULL_END

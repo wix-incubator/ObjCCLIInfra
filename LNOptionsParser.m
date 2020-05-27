@@ -7,6 +7,7 @@
 //
 
 #import "LNOptionsParser.h"
+#import "GBCli.h"
 
 static NSArray<NSString*>* __introStrings;
 static NSArray<NSString*>* __usageStrings;
@@ -21,7 +22,7 @@ static NSArray<NSString*>* __additionalStrings;
 
 @property (nonatomic, copy, readwrite) NSString* name;
 @property (nonatomic, copy, readwrite) NSString* shortcut;
-@property (nonatomic, readwrite) GBValueRequirements valueRequirement;
+@property (nonatomic, readwrite) LNUsageOptionRequirement valueRequirement;
 @property (nonatomic, copy, readwrite) NSString* description;
 
 @end
@@ -30,12 +31,12 @@ static NSArray<NSString*>* __additionalStrings;
 
 @synthesize description=_description;
 
-+ (instancetype)optionWithName:(NSString *)name valueRequirement:(GBValueRequirements)valueRequirement description:(NSString *)description
++ (instancetype)optionWithName:(NSString *)name valueRequirement:(LNUsageOptionRequirement)valueRequirement description:(NSString *)description
 {
 	return [self optionWithName:name shortcut:nil valueRequirement:valueRequirement description:description];
 }
 
-+ (instancetype)optionWithName:(NSString*)name shortcut:(nullable NSString*)shortcut valueRequirement:(GBValueRequirements)valueRequirement description:(NSString*)description
++ (instancetype)optionWithName:(NSString*)name shortcut:(nullable NSString*)shortcut valueRequirement:(LNUsageOptionRequirement)valueRequirement description:(NSString*)description
 {
 	LNUsageOption* rv = [LNUsageOption new];
 	rv.name = name;
@@ -79,7 +80,7 @@ void LNUsageSetOptions(NSArray<LNUsageOption*>* __nullable usageOptions)
 	{
 		options = [NSMutableArray new];
 	}
-	[options addObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:GBValueNone description:@"Prints usage"]];
+	[options addObject:[LNUsageOption optionWithName:@"help" shortcut:@"h" valueRequirement:LNUsageOptionRequirementNone description:@"Prints usage"]];
 	
 	__usageOptions = options;
 }
@@ -91,7 +92,7 @@ void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOpti
 	{
 		options = [NSMutableArray new];
 	}
-	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:GBValueNone description:@"Prints deprecated or advanced usage"]];
+	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:LNUsageOptionRequirementNone description:@"Prints deprecated or advanced usage"]];
 	
 	__hiddenUsageOptions = options;
 }
@@ -209,7 +210,7 @@ void LNUsagePrintMessage(NSString* __nullable prependMessage, LNLogLevel logLeve
 	_LNUsagePrintMessage(prependMessage, logLevel, NO);
 }
 
-GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv)
+id<LNUsageArgumentParser> LNUsageParseArguments(int argc, const char* __nonnull * __nonnull argv)
 {
 	GBCommandLineParser *parser = [GBCommandLineParser new];
 	
@@ -243,7 +244,7 @@ GBSettings* LNUsageParseArguments(int argc, const char* __nonnull * __nonnull ar
 		exit(0);
 	}
 	
-	return settings;
+	return (id)settings;
 }
 
 void LNUsagePrintArguments(LNLogLevel logLevel)
