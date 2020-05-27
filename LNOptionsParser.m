@@ -9,12 +9,15 @@
 #import "LNOptionsParser.h"
 #import "GBCli.h"
 
+static NSString* prefixString = @"    ";
+
 static NSArray<NSString*>* __introStrings;
 static NSArray<NSString*>* __usageStrings;
 static NSArray<LNUsageOption*>* __usageOptions;
 static NSArray<LNUsageOption*>* __hiddenUsageOptions;
 static NSArray<NSDictionary<NSString*, NSArray*>*>* __additionalTopics;
 static NSArray<NSString*>* __additionalStrings;
+static NSString* __utilName;
 
 @interface _LNEmptyOption : LNUsageOption @end
 
@@ -61,6 +64,12 @@ static void __LNUsageInit(void)
 {
 	LNUsageSetOptions(nil);
 	LNUsageSetHiddenOptions(nil);
+	LNUsageSetUtilName(nil);
+}
+
+void LNUsageSetUtilName(NSString* name)
+{
+	__utilName = name ?: NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent;
 }
 
 void LNUsageSetIntroStrings(NSArray<NSString*>* introStrings)
@@ -92,7 +101,7 @@ void LNUsageSetHiddenOptions(NSArray<LNUsageOption*>* __nullable hiddenUsageOpti
 	{
 		options = [NSMutableArray new];
 	}
-	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:LNUsageOptionRequirementNone description:@"Prints deprecated or advanced usage"]];
+	[options addObject:[LNUsageOption optionWithName:@"help2" valueRequirement:LNUsageOptionRequirementNone description:@"Prints advanced or deprecated usage"]];
 	
 	__hiddenUsageOptions = options;
 }
@@ -107,14 +116,20 @@ void LNUsageSetAdditionalStrings(NSArray<NSString*>* additionalStrings)
 	__additionalStrings = [additionalStrings copy];
 }
 
-static void _LNPrintOptionsArray(NSString* title, NSArray<LNUsageOption*>* usageOptions, NSString* utilName)
+static void _LNPrintOptionsArray(NSString* title, NSArray<LNUsageOption*>* usageOptions, NSString* utilName, BOOL includeHiddenInLength)
 {
 	__block NSUInteger longestOptionLength = 0;
-	__block NSUInteger longestShortcutLength = 0;
 	
-	[usageOptions enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-		longestOptionLength = obj.name.length > longestOptionLength ? obj.name.length : longestOptionLength;
-		longestShortcutLength = obj.shortcut.length > longestShortcutLength ? obj.shortcut.length : longestShortcutLength;
+	NSArray<LNUsageOption*>* forLength = __usageOptions;
+	if(includeHiddenInLength)
+	{
+		forLength = [forLength arrayByAddingObjectsFromArray:__hiddenUsageOptions];
+	}
+	
+	[forLength enumerateObjectsUsingBlock:^(LNUsageOption * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+		if(obj.name == nil) { return; }
+		NSUInteger currentLength = [NSString stringWithFormat:@"--%@%@", obj.name, obj.shortcut ? [NSString stringWithFormat:@", -%@", obj.shortcut] : @""].length;
+		longestOptionLength = currentLength > longestOptionLength ? currentLength : longestOptionLength;
 	}];
 	
 	LNLog(LNLogLevelStdOut, @"%@:", title);
@@ -125,8 +140,7 @@ static void _LNPrintOptionsArray(NSString* title, NSArray<LNUsageOption*>* usage
 			return;
 		}
 		
-		NSUInteger prefix = longestOptionLength + longestShortcutLength + 5;
-		NSString* prefixString = @"    ";
+		NSUInteger prefix = longestOptionLength;
 		
 		NSMutableString* description = [NSMutableString new];
 		[[obj.description componentsSeparatedByString:@"\n"] enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -146,13 +160,11 @@ static void _LNPrintOptionsArray(NSString* title, NSArray<LNUsageOption*>* usage
 
 static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, BOOL printHidden)
 {
-	NSString* utilName = NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent;
-	
 	if(prependMessage.length > 0)
 	{
 		if(logLevel == LNLogLevelError)
 		{
-			prependMessage = [NSString stringWithFormat:@"%@ %@", prependMessage, [NSString stringWithFormat:@"See “%@ --help” for usage.", NSProcessInfo.processInfo.arguments.firstObject.lastPathComponent]];
+			prependMessage = [NSString stringWithFormat:@"%@ %@", prependMessage, [NSString stringWithFormat:@"See “%@ --help” for usage.", __utilName]];
 		}
 		LNLog(logLevel, @"%@\n", prependMessage);
 		
@@ -163,7 +175,7 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	if(__introStrings.count > 0)
 	{
 		[__introStrings enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-			LNLog(LNLogLevelStdOut, obj, utilName);
+			LNLog(LNLogLevelStdOut, obj, __utilName);
 		}];
 		LNLog(LNLogLevelStdOut, @"");
 	}
@@ -172,16 +184,16 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	{
 		LNLog(LNLogLevelStdOut, @"Usage Examples:");
 		[__usageStrings enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-			LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@", obj], utilName);
+			LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"%@%@", prefixString, obj], __utilName);
 		}];
 		LNLog(LNLogLevelStdOut, @"");
 	}
 	
-	_LNPrintOptionsArray(@"Options", __usageOptions, utilName);
+	_LNPrintOptionsArray(@"Options", __usageOptions, __utilName, printHidden);
 	
 	if(printHidden)
 	{
-		_LNPrintOptionsArray(@"Deprecated or Advanced Options", __hiddenUsageOptions, utilName);
+		_LNPrintOptionsArray(@"Advanced or Deprecated Options", __hiddenUsageOptions, __utilName, YES);
 	}
 	
 	if(__additionalTopics.count > 0)
@@ -191,7 +203,7 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 			NSArray<NSString*>* strings = obj[title];
 			LNLog(LNLogLevelStdOut, @"%@:", title);
 			[strings enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-				LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"    %@", obj], utilName);
+				LNLog(LNLogLevelStdOut, [NSString stringWithFormat:@"%@%@", prefixString, obj], __utilName);
 			}];
 			LNLog(LNLogLevelStdOut, @"");
 		}];
@@ -200,7 +212,7 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 	if(__additionalStrings.count > 0)
 	{
 		[__additionalStrings enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-			LNLog(LNLogLevelStdOut, obj, utilName);
+			LNLog(LNLogLevelStdOut, obj, __utilName);
 		}];
 	}
 }
