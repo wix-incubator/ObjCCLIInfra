@@ -15,3 +15,8 @@ public func LNUsageParseArguments() -> LNUsageArgumentParser {
 		return __LNUsageParseArguments(CommandLine.argc, pointer)
 	}
 }
+
+public func LNUsagePrintMessageAndExit(prependMessage: String?, logLevel: LNLogLevel, exitCode: Int32 = -1) -> Never {
+	LNUsagePrintMessage(prependMessage: prependMessage, logLevel: logLevel)
+	exit(exitCode)
+}

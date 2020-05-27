@@ -166,7 +166,7 @@ static void _LNUsagePrintMessage(NSString* prependMessage, LNLogLevel logLevel, 
 		{
 			prependMessage = [NSString stringWithFormat:@"%@ %@", prependMessage, [NSString stringWithFormat:@"See “%@ --help” for usage.", __utilName]];
 		}
-		LNLog(logLevel, @"%@\n", prependMessage);
+		LNLog(logLevel, @"%@", prependMessage);
 		
 		
 		return;
