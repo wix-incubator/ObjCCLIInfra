@@ -16,7 +16,11 @@ public func LNUsageParseArguments() -> LNUsageArgumentParser {
 	}
 }
 
-public func LNUsagePrintMessageAndExit(prependMessage: String?, logLevel: LNLogLevel, exitCode: Int32 = -1) -> Never {
+public func LNUsagePrintMessageAndExit(prependMessage: String?, logLevel: LNLogLevel) -> Never {
+	LNUsagePrintMessageAndExit(prependMessage: prependMessage, logLevel: logLevel, exitCode: logLevel == .error ? -1 : 0)
+}
+
+public func LNUsagePrintMessageAndExit(prependMessage: String?, logLevel: LNLogLevel, exitCode: Int32) -> Never {
 	LNUsagePrintMessage(prependMessage: prependMessage, logLevel: logLevel)
 	exit(exitCode)
 }
