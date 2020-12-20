@@ -1,0 +1,3 @@
+[submodule "DTXLoggingInfra"]
+	path = DTXLoggingInfra
+	url = https://github.com/wix/DTXLoggingInfra.git

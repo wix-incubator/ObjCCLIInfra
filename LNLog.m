@@ -7,7 +7,9 @@
 //
 
 #import "LNLog.h"
-#include <os/log.h>
+#import "DTXLogging.h"
+
+DTX_CREATE_LOG(CLI)
 
 void LNLog(LNLogLevel logLevel, NSString* format, ...)
 {
@@ -34,14 +36,14 @@ void LNLog(LNLogLevel logLevel, NSString* format, ...)
 		{
 			@autoreleasepool
 			{
-				fprintf(selectedOutputHandle, "%s\n", [message UTF8String]);
+				fprintf(selectedOutputHandle, "%s\n", message.UTF8String);
 			}
 		}
 		
 		NSNumber* osLogType = logToLogMapping[@(logLevel)];
 		if(osLogType)
 		{
-			os_log_with_type(OS_LOG_DEFAULT, [osLogType unsignedIntegerValue], "%{public}s", message.UTF8String);
+			__dtx_log(__prepare_and_return_file_log(), osLogType.unsignedIntegerValue, @"", @"%@", message);
 		}
 	}
 }
